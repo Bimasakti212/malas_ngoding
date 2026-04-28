@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIPALSIS - Sistem Pelanggaran Siswa</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sidebar-width: 240px;
+    --primary: #1a3c6e;
+    --primary-light: #e8eef7;
+    --accent: #e63946;
+    --success: #2d9e5f;
+    --warning: #e08c1a;
+    --sidebar-bg: #0f2447;
+    --sidebar-text: #a8bcd4;
+    --sidebar-active: #ffffff;
+    --body-bg: #f0f4f9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--body-bg); color: #1a2035; }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed; top: 0; left: 0;
+    width: var(--sidebar-width); height: 100vh;
+    background: var(--sidebar-bg);
+    display: flex; flex-direction: column;
+    z-index: 100;
+  }
+  .sidebar-brand {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-brand .brand-title {
+    font-size: 15px; font-weight: 700;
+    color: #fff; letter-spacing: 0.5px;
+  }
+  .sidebar-brand .brand-sub {
+    font-size: 11px; color: var(--sidebar-text);
+    margin-top: 2px;
+  }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 600;
+    color: rgba(168,188,212,0.5);
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 12px 20px 6px;
+  }
+  .nav-item-custom {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; cursor: pointer;
+    color: var(--sidebar-text);
+    font-size: 13.5px; font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .nav-item-custom:hover {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+  }
+  .nav-item-custom.active {
+    background: rgba(255,255,255,0.1);
+    color: var(--sidebar-active);
+    border-left-color: #4a9eff;
+  }
+  .nav-item-custom i { font-size: 16px; width: 20px; }
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sidebar-footer .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #2563ab;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .sidebar-footer .user-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .sidebar-footer .user-role { font-size: 11px; color: var(--sidebar-text); }
+
+  /* MAIN */
+  .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+  .topbar {
+    background: #fff;
+    border-bottom: 1px solid #e4eaf2;
+    padding: 0 28px;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title { font-size: 16px; font-weight: 700; color: var(--primary); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-badge {
+    background: var(--accent); color: #fff;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 20px;
+    vertical-align: middle;
+  }
+
+  /* CONTENT */
+  .content-area { padding: 28px; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px 22px;
+    border: 1px solid #e4eaf2;
+  }
+  .stat-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 14px;
+  }
+  .stat-icon.blue { background: #dbeafe; color: #1d4ed8; }
+  .stat-icon.red { background: #fee2e2; color: #b91c1c; }
+  .stat-icon.amber { background: #fef3c7; color: #b45309; }
+  .stat-icon.green { background: #d1fae5; color: #065f46; }
+  .stat-value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .stat-label { font-size: 12.5px; color: #64748b; font-weight: 500; }
+  .stat-trend { font-size: 12px; margin-top: 8px; }
+  .stat-trend.up { color: var(--accent); }
+  .stat-trend.down { color: var(--success); }
+
+  /* CHART BARS */
+  .chart-bar-wrap { display: flex; align-items: flex-end; gap: 8px; height: 100px; padding-top: 10px; }
+  .chart-bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chart-bar { width: 100%; border-radius: 6px 6px 0 0; background: var(--primary-light); transition: height 0.3s; }
+  .chart-bar.active-bar { background: #2563ab; }
+  .chart-bar-label { font-size: 10px; color: #94a3b8; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .data-table thead th {
+    background: #f8fafc;
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: #64748b; padding: 12px 16px;
+    border-bottom: 1px solid #e4eaf2;
+  }
+  .data-table thead th:first-child { border-radius: 10px 0 0 0; }
+  .data-table thead th:last-child { border-radius: 0 10px 0 0; }
+  .data-table tbody tr {
+    transition: background 0.15s;
+  }
+  .data-table tbody tr:hover { background: #f8fafc; }
+  .data-table tbody td {
+    padding: 13px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13.5px; vertical-align: middle;
+  }
+  .badge-pelanggaran {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 20px; font-size: 11.5px; font-weight: 600;
+  }
+  .badge-telat { background: #fef3c7; color: #92400e; }
+  .badge-pakaian { background: #fee2e2; color: #991b1b; }
+  .badge-makeup { background: #fce7f3; color: #9d174d; }
+
+  /* MODAL */
+  .modal-header { background: var(--sidebar-bg); }
+  .modal-title { color: #fff; }
+  .modal-header .btn-close { filter: invert(1); }
+  .form-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 5px; }
+  .form-control, .form-select {
+    font-size: 13.5px; border: 1px solid #d1d5db;
+    border-radius: 8px; padding: 9px 12px;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: #2563ab; box-shadow: 0 0 0 3px rgba(37,99,171,0.12);
+  }
+  .btn-primary-custom {
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    padding: 9px 20px; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary-custom:hover { background: #1e4a8a; }
+  .btn-danger-custom {
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 8px;
+    padding: 6px 14px; font-size: 12px; font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-warning-custom {
+    background: var(--warning); color: #fff;
+    border: none; border-radius: 8px;
+    padding: 6px 14px; font-size: 12px; font-weight: 600;
+    cursor: pointer;
+  }
+  .section-card {
+    background: #fff; border-radius: 14px;
+    border: 1px solid #e4eaf2; overflow: hidden;
+  }
+  .section-card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .section-card-title { font-size: 14.5px; font-weight: 700; }
+  .search-input {
+    border: 1px solid #d1d5db; border-radius: 8px;
+    padding: 8px 14px 8px 36px; font-size: 13px;
+    background: #f8fafc; width: 220px;
+    outline: none;
+  }
+  .search-input:focus { border-color: #2563ab; background: #fff; }
+  .search-wrap { position: relative; }
+  .search-wrap i {
+    position: absolute; left: 11px; top: 50%;
+    transform: translateY(-50%); color: #94a3b8; font-size: 14px;
+  }
+  .alert-toast {
+    position: fixed; top: 20px; right: 24px;
+    z-index: 9999; min-width: 280px;
+    border-radius: 10px; padding: 14px 18px;
+    font-size: 13.5px; font-weight: 500;
+    display: none; align-items: center; gap: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+  .alert-toast.success { background: #d1fae5; color: #065f46; border-left: 4px solid #059669; }
+  .alert-toast.error { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+  .recent-list-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px; border-bottom: 1px solid #f1f5f9;
+  }
+  .recent-list-item:last-child { border-bottom: none; }
+  .recent-dot {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .empty-state {
+    text-align: center; padding: 50px 20px; color: #94a3b8;
+  }
+  .empty-state i { font-size: 40px; margin-bottom: 12px; display: block; }
+  .empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ALERT TOAST -->
+<div class="alert-toast" id="alertToast">
+  <i class="bi bi-check-circle-fill"></i>
+  <span id="alertMsg"></span>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:34px;height:34px;background:#4a9eff;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <i class="bi bi-shield-check" style="color:#fff;font-size:18px;"></i>
+      </div>
+      <div>
+        <div class="brand-title">SIPALSIS</div>
+        <div class="brand-sub">Sistem Pelanggaran Siswa</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Menu Utama</div>
+    <a class="nav-item-custom active" onclick="showPage('dashboard', this)">
+      <i class="bi bi-grid-1x2-fill"></i> Dashboard
+    </a>
+    <a class="nav-item-custom" onclick="showPage('data-siswa', this)">
+      <i class="bi bi-people-fill"></i> Data Pelanggaran
+    </a>
+    <div class="nav-section-label" style="margin-top:8px;">Laporan</div>
+    <a class="nav-item-custom" onclick="showPage('dashboard', this)">
+      <i class="bi bi-bar-chart-fill"></i> Statistik
+    </a>
+    <a class="nav-item-custom" style="pointer-events:none;opacity:0.4;">
+      <i class="bi bi-printer-fill"></i> Cetak Laporan
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="avatar">A</div>
+    <div>
+      <div class="user-name">Admin</div>
+      <div class="user-role">Guru BK</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    <div class="topbar-right">
+      <span style="font-size:13px;color:#64748b;">Tahun Ajaran: 2024/2025</span>
+      <div style="width:1px;height:20px;background:#e4eaf2;"></div>
+      <i class="bi bi-bell" style="font-size:18px;color:#64748b;cursor:pointer;"></i>
+      <div class="avatar" style="width:34px;height:34px;border-radius:50%;background:#1a3c6e;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">A</div>
+    </div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- ===== PAGE: DASHBOARD ===== -->
+    <div class="page active" id="page-dashboard">
+      <div style="margin-bottom:22px;">
+        <p style="font-size:13px;color:#64748b;">Selamat datang kembali, <strong>Admin</strong>. Berikut ringkasan data pelanggaran hari ini.</p>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Total Pelanggaran</div>
+            <div class="stat-trend up"><i class="bi bi-arrow-up"></i> Update otomatis</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon amber"><i class="bi bi-clock-fill"></i></div>
+            <div class="stat-value" id="statTelat">0</div>
+            <div class="stat-label">Telat Masuk</div>
+            <div class="stat-trend up" id="pctTelat">0%</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon red"><i class="bi bi-scissors"></i></div>
+            <div class="stat-value" id="statPakaian">0</div>
+            <div class="stat-label">Pakaian Tidak Lengkap</div>
+            <div class="stat-trend up" id="pctPakaian">0%</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-brush-fill"></i></div>
+            <div class="stat-value" id="statMakeup">0</div>
+            <div class="stat-label">Memakai Make Up</div>
+            <div class="stat-trend up" id="pctMakeup">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHART + RECENT -->
+      <div class="row g-3">
+        <div class="col-md-7">
+          <div class="section-card">
+            <div class="section-card-header">
+              <span class="section-card-title">Distribusi Pelanggaran</span>
+              <span style="font-size:12px;color:#64748b;">Visual perbandingan</span>
+            </div>
+            <div style="padding:20px;">
+              <div id="chartBars" class="chart-bar-wrap">
+                <!-- JS rendered -->
+              </div>
+              <div style="margin-top:14px;display:flex;gap:16px;flex-wrap:wrap;">
+                <span style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:5px;">
+                  <span style="width:10px;height:10px;background:#f59e0b;border-radius:2px;display:inline-block;"></span> Telat Masuk
+                </span>
+                <span style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:5px;">
+                  <span style="width:10px;height:10px;background:#ef4444;border-radius:2px;display:inline-block;"></span> Pakaian
+                </span>
+                <span style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:5px;">
+                  <span style="width:10px;height:10px;background:#ec4899;border-radius:2px;display:inline-block;"></span> Make Up
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="section-card" style="height:100%;">
+            <div class="section-card-header">
+              <span class="section-card-title">Pelanggaran Terbaru</span>
+              <a href="#" onclick="showPage('data-siswa',null)" style="font-size:12px;color:#2563ab;">Lihat semua</a>
+            </div>
+            <div id="recentList">
+              <!-- JS rendered -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: DATA SISWA ===== -->
+    <div class="page" id="page-data-siswa">
+      <div class="section-card">
+        <div class="section-card-header">
+          <span class="section-card-title"><i class="bi bi-table" style="margin-right:7px;color:#2563ab;"></i>Data Pelanggaran Siswa</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="search-wrap">
+              <i class="bi bi-search"></i>
+              <input type="text" class="search-input" id="searchInput" placeholder="Cari nama / NIS..." oninput="renderTable()">
+            </div>
+            <select class="form-select" id="filterPelanggaran" style="width:160px;font-size:13px;padding:8px 10px;" onchange="renderTable()">
+              <option value="">Semua Jenis</option>
+              <option value="Telat Masuk">Telat Masuk</option>
+              <option value="Pakaian Tidak Lengkap">Pakaian Tidak Lengkap</option>
+              <option value="Memakai Make Up">Memakai Make Up</option>
+            </select>
+            <button class="btn-primary-custom" onclick="openModal()">
+              <i class="bi bi-plus-lg"></i> Tambah Data
+            </button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">No</th>
+                <th>NIS</th>
+                <th>Nama Siswa</th>
+                <th>Kelas</th>
+                <th>Jenis Pelanggaran</th>
+                <th>Tanggal</th>
+                <th>Keterangan</th>
+                <th style="width:120px;text-align:center;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+          </table>
+          <div class="empty-state" id="emptyState" style="display:none;">
+            <i class="bi bi-inbox"></i>
+            <p>Belum ada data pelanggaran.</p>
+          </div>
+        </div>
+        <div style="padding:14px 16px;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12.5px;color:#64748b;" id="tableInfo"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL TAMBAH/EDIT -->
+<div class="modal fade" id="modalForm" tabindex="-1">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;border:none;">
+      <div class="modal-header" style="padding:16px 20px;">
+        <h5 class="modal-title" id="modalTitle">Tambah Data Pelanggaran</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+        <input type="hidden" id="editId">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">NIS *</label>
+            <input type="text" class="form-control" id="fNis" placeholder="Contoh: 20240001">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Nama Siswa *</label>
+            <input type="text" class="form-control" id="fNama" placeholder="Nama lengkap siswa">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Kelas *</label>
+            <select class="form-select" id="fKelas">
+              <option value="">-- Pilih Kelas --</option>
+              <option>X-A</option><option>X-B</option><option>X-C</option>
+              <option>XI-A</option><option>XI-B</option><option>XI-C</option>
+              <option>XII-A</option><option>XII-B</option><option>XII-C</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Jenis Pelanggaran *</label>
+            <select class="form-select" id="fJenis">
+              <option value="">-- Pilih Jenis --</option>
+              <option>Telat Masuk</option>
+              <option>Pakaian Tidak Lengkap</option>
+              <option>Memakai Make Up</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Tanggal *</label>
+            <input type="date" class="form-control" id="fTanggal">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Keterangan</label>
+            <input type="text" class="form-control" id="fKeterangan" placeholder="Keterangan tambahan...">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:14px 20px;border-top:1px solid #f1f5f9;">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="font-size:13.5px;">Batal</button>
+        <button type="button" class="btn-primary-custom" onclick="saveData()">
+          <i class="bi bi-save"></i> Simpan Data
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HAPUS -->
+<div class="modal fade" id="modalHapus" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;border:none;">
+      <div class="modal-header" style="background:#b91c1c;padding:14px 18px;">
+        <h6 class="modal-title" style="color:#fff;font-size:14px;">Konfirmasi Hapus</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);"></button>
+      </div>
+      <div class="modal-body" style="padding:18px;">
+        <p style="font-size:13.5px;">Yakin ingin menghapus data pelanggaran ini? Tindakan ini tidak dapat dibatalkan.</p>
+      </div>
+      <div class="modal-footer" style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn-danger-custom" onclick="confirmHapus()">Hapus</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ===== DATA STORE =====
+let dataStore = [
+  { id:1, nis:'20240001', nama:'Siti Rahayu', kelas:'XI-A', jenis:'Telat Masuk', tanggal:'2025-01-10', keterangan:'Terlambat 30 menit' },
+  { id:2, nis:'20240042', nama:'Dewi Anggraini', kelas:'X-B', jenis:'Pakaian Tidak Lengkap', tanggal:'2025-01-11', keterangan:'Tidak memakai dasi' },
+  { id:3, nis:'20240078', nama:'Rina Kusuma', kelas:'XII-C', jenis:'Memakai Make Up', tanggal:'2025-01-12', keterangan:'Memakai lipstik tebal' },
+  { id:4, nis:'20240099', nama:'Aulia Fitri', kelas:'X-A', jenis:'Telat Masuk', tanggal:'2025-01-13', keterangan:'Terlambat 15 menit' },
+  { id:5, nis:'20240055', nama:'Nurul Hidayah', kelas:'XI-B', jenis:'Pakaian Tidak Lengkap', tanggal:'2025-01-14', keterangan:'Rok tidak sesuai' },
+];
+let nextId = 6;
+let deleteTargetId = null;
+
+// ===== NAVIGATION =====
+function showPage(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item-custom').forEach(n => n.classList.remove('active'));
+  const titles = { dashboard: 'Dashboard', 'data-siswa': 'Data Pelanggaran Siswa' };
+  document.getElementById('topbarTitle').textContent = titles[page] || page;
+  if (el) el.classList.add('active');
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'data-siswa') renderTable();
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const total = dataStore.length;
+  const telat = dataStore.filter(d => d.jenis === 'Telat Masuk').length;
+  const pakaian = dataStore.filter(d => d.jenis === 'Pakaian Tidak Lengkap').length;
+  const makeup = dataStore.filter(d => d.jenis === 'Memakai Make Up').length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statTelat').textContent = telat;
+  document.getElementById('statPakaian').textContent = pakaian;
+  document.getElementById('statMakeup').textContent = makeup;
+  const pct = v => total > 0 ? Math.round(v/total*100) + '%' : '0%';
+  document.getElementById('pctTelat').textContent = pct(telat);
+  document.getElementById('pctPakaian').textContent = pct(pakaian);
+  document.getElementById('pctMakeup').textContent = pct(makeup);
+
+  // Chart
+  const max = Math.max(telat, pakaian, makeup, 1);
+  const bars = [
+    { label: 'Telat', val: telat, color: '#f59e0b' },
+    { label: 'Pakaian', val: pakaian, color: '#ef4444' },
+    { label: 'Make Up', val: makeup, color: '#ec4899' },
+  ];
+  document.getElementById('chartBars').innerHTML = bars.map(b => `
+    <div class="chart-bar-item">
+      <span style="font-size:13px;font-weight:700;color:#1a2035;">${b.val}</span>
+      <div class="chart-bar" style="height:${Math.max(b.val/max*80,4)}px;background:${b.color};"></div>
+      <div class="chart-bar-label">${b.label}</div>
+    </div>
+  `).join('');
+
+  // Recent
+  const recent = [...dataStore].reverse().slice(0, 4);
+  const icons = { 'Telat Masuk': { bg: '#fef3c7', color: '#b45309', icon: 'bi-clock' }, 'Pakaian Tidak Lengkap': { bg: '#fee2e2', color: '#b91c1c', icon: 'bi-scissors' }, 'Memakai Make Up': { bg: '#fce7f3', color: '#9d174d', icon: 'bi-brush' } };
+  document.getElementById('recentList').innerHTML = recent.length === 0
+    ? '<div class="empty-state"><i class="bi bi-inbox"></i><p>Belum ada data.</p></div>'
+    : recent.map(d => {
+        const ic = icons[d.jenis] || { bg: '#e0e7ef', color: '#1a3c6e', icon: 'bi-exclamation' };
+        return `<div class="recent-list-item">
+          <div class="recent-dot" style="background:${ic.bg};color:${ic.color};"><i class="bi ${ic.icon}" style="font-size:16px;"></i></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13.5px;font-weight:600;">${d.nama}</div>
+            <div style="font-size:12px;color:#64748b;">${d.jenis} · ${d.kelas}</div>
+          </div>
+          <div style="font-size:11.5px;color:#94a3b8;">${formatDate(d.tanggal)}</div>
+        </div>`;
+      }).join('');
+}
+
+// ===== TABLE =====
+function renderTable() {
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const jenis = document.getElementById('filterPelanggaran')?.value || '';
+  let filtered = dataStore.filter(d => {
+    const matchQ = !q || d.nama.toLowerCase().includes(q) || d.nis.toLowerCase().includes(q);
+    const matchJ = !jenis || d.jenis === jenis;
+    return matchQ && matchJ;
+  });
+
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('tableInfo').textContent = `Menampilkan ${filtered.length} dari ${dataStore.length} data`;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const badgeMap = { 'Telat Masuk': 'badge-telat', 'Pakaian Tidak Lengkap': 'badge-pakaian', 'Memakai Make Up': 'badge-makeup' };
+  tbody.innerHTML = filtered.map((d, i) => `
+    <tr>
+      <td style="color:#94a3b8;font-size:12.5px;">${i+1}</td>
+      <td><code style="background:#f1f5f9;padding:2px 7px;border-radius:5px;font-size:12px;">${d.nis}</code></td>
+      <td><strong style="font-weight:600;">${d.nama}</strong></td>
+      <td><span style="background:#e8eef7;color:#1a3c6e;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:600;">${d.kelas}</span></td>
+      <td><span class="badge-pelanggaran ${badgeMap[d.jenis]}">${d.jenis}</span></td>
+      <td style="color:#475569;font-size:13px;">${formatDate(d.tanggal)}</td>
+      <td style="color:#64748b;font-size:13px;">${d.keterangan || '-'}</td>
+      <td style="text-align:center;">
+        <button class="btn-warning-custom" onclick="openModal(${d.id})" style="margin-right:4px;"><i class="bi bi-pencil-fill"></i></button>
+        <button class="btn-danger-custom" onclick="openHapus(${d.id})"><i class="bi bi-trash-fill"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ===== MODAL FORM =====
+function openModal(id = null) {
+  document.getElementById('editId').value = '';
+  document.getElementById('fNis').value = '';
+  document.getElementById('fNama').value = '';
+  document.getElementById('fKelas').value = '';
+  document.getElementById('fJenis').value = '';
+  document.getElementById('fTanggal').value = '';
+  document.getElementById('fKeterangan').value = '';
+  document.getElementById('modalTitle').textContent = id ? 'Edit Data Pelanggaran' : 'Tambah Data Pelanggaran';
+
+  if (id) {
+    const d = dataStore.find(x => x.id === id);
+    if (d) {
+      document.getElementById('editId').value = d.id;
+      document.getElementById('fNis').value = d.nis;
+      document.getElementById('fNama').value = d.nama;
+      document.getElementById('fKelas').value = d.kelas;
+      document.getElementById('fJenis').value = d.jenis;
+      document.getElementById('fTanggal').value = d.tanggal;
+      document.getElementById('fKeterangan').value = d.keterangan;
+    }
+  } else {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('fTanggal').value = today;
+  }
+  new bootstrap.Modal(document.getElementById('modalForm')).show();
+}
+
+function saveData() {
+  const nis = document.getElementById('fNis').value.trim();
+  const nama = document.getElementById('fNama').value.trim();
+  const kelas = document.getElementById('fKelas').value;
+  const jenis = document.getElementById('fJenis').value;
+  const tanggal = document.getElementById('fTanggal').value;
+  const keterangan = document.getElementById('fKeterangan').value.trim();
+
+  if (!nis || !nama || !kelas || !jenis || !tanggal) {
+    showToast('Harap lengkapi semua field wajib!', 'error'); return;
+  }
+
+  const editId = document.getElementById('editId').value;
+  if (editId) {
+    const idx = dataStore.findIndex(x => x.id == editId);
+    if (idx > -1) dataStore[idx] = { id: parseInt(editId), nis, nama, kelas, jenis, tanggal, keterangan };
+    showToast('Data berhasil diperbarui!', 'success');
+  } else {
+    dataStore.push({ id: nextId++, nis, nama, kelas, jenis, tanggal, keterangan });
+    showToast('Data berhasil ditambahkan!', 'success');
+  }
+
+  bootstrap.Modal.getInstance(document.getElementById('modalForm')).hide();
+  renderTable();
+  renderDashboard();
+}
+
+// ===== HAPUS =====
+function openHapus(id) {
+  deleteTargetId = id;
+  new bootstrap.Modal(document.getElementById('modalHapus')).show();
+}
+function confirmHapus() {
+  dataStore = dataStore.filter(x => x.id !== deleteTargetId);
+  bootstrap.Modal.getInstance(document.getElementById('modalHapus')).hide();
+  renderTable();
+  renderDashboard();
+  showToast('Data berhasil dihapus.', 'success');
+}
+
+// ===== HELPERS =====
+function formatDate(str) {
+  if (!str) return '-';
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+}
+function showToast(msg, type) {
+  const el = document.getElementById('alertToast');
+  document.getElementById('alertMsg').textContent = msg;
+  el.className = 'alert-toast ' + type;
+  el.style.display = 'flex';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+// Init
+renderDashboard();
+</script>
+</body>
+</html>
